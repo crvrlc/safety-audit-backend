@@ -31,7 +31,7 @@ const googleCallback = async (req, res) => {
     };
 
     const dashboard = roleRoutes[user.role];
-    res.redirect(`http://localhost:5173/auth/callback?token=${token}&role=${user.role}&dashboard=${dashboard}`);
+  res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${token}&role=${user.role}&dashboard=${dashboard}`);
   } catch (err) {
     res.status(500).json({ message: 'Auth error', error: err.message });
   }

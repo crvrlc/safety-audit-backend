@@ -17,7 +17,7 @@ router.get('/google', (req, res, next) => {
 // Step 2: Google redirects back here
 router.get('/google/callback',
   passport.authenticate('google', {
-    failureRedirect: 'http://localhost:5173/login',
+    failureRedirect: `${process.env.FRONTEND_URL}/login`,
     // session: false
   }),
   googleCallback
