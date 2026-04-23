@@ -1,0 +1,278 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "windows", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── ENUMS ────────────────────────────────────────────
+
+enum Role {
+  admin
+  safety_officer
+  facility_manager
+}
+
+enum AuditStatus {
+  draft // created inspection but not yet scheduled - officer
+  scheduled // inspection is scheduled but not yet started - officer
+  ongoing // the checklist is started - officer
+  submitted // checklist is done and report is submitted to manager - officer
+  acknowledged // manager acknowledged the report
+  resolving // manager assigned the corrective action to the relevant team/person
+  pending_review // manager marks the corrective actions as resolved and is awaiting for officer review
+  completed // officer verifies the repairs made and the inspection cycle is completed
+  archived // completed record is archived after the sem ends
+}
+
+enum InspectionType {
+  routine
+  follow_up
+}
+
+enum ResolutionStatus {
+  pending
+  assigned
+  resolved
+}
+
+enum MaintenanceStatus {
+  waiting_for_repairs
+  overdue_repairs
+  completed_repairs
+}
+
+enum Severity {
+  low
+  medium
+  high
+}
+
+// ─── MODELS ───────────────────────────────────────────
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  googleId  String   @unique
+  avatarUrl String?
+  role      Role
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  mobileNum  String?
+  department String?
+
+  auditsInspected     Audit[]             @relation("InspectorAudits")
+  maintenanceAssigned MaintenanceTask[]   @relation("AssignedMaintenance")
+  templatesCreated    ChecklistTemplate[] @relation("CreatedTemplates")
+  evidenceUploaded    Evidence[]          @relation("UploadedEvidence")
+  unitsManaged        Unit[]              @relation("UnitManager")
+  notificationPreference NotificationPreference?
+}
+
+model Facility {
+  id                   Int      @id @default(autoincrement())
+  name                 String
+  unitInCharge         String?
+  facilityManagerName  String?
+  facilityManagerEmail String?
+  createdAt            DateTime @default(now())
+
+  offices Office[]
+  units   Unit[]
+}
+
+model Unit {
+  id   Int    @id @default(autoincrement())
+  name String
+
+  facilityId Int?
+  facility   Facility? @relation(fields: [facilityId], references: [id])
+
+  managerId Int?
+  manager   User? @relation("UnitManager", fields: [managerId], references: [id])
+
+  @@index([managerId])
+  @@index([facilityId])
+}
+
+model Office {
+  id   Int    @id @default(autoincrement())
+  name String
+
+  facilityId Int
+  facility   Facility @relation(fields: [facilityId], references: [id])
+
+  audits Audit[]
+
+  @@index([facilityId])
+}
+
+model ChecklistTemplate {
+  id        Int      @id @default(autoincrement())
+  name      String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  createdBy     Int
+  createdByUser User @relation("CreatedTemplates", fields: [createdBy], references: [id])
+
+  sections ChecklistSection[]
+  audits   Audit[]
+
+  @@index([createdBy])
+}
+
+model ChecklistSection {
+  id          Int     @id @default(autoincrement())
+  name        String
+  description String?
+  order       Int
+  isActive    Boolean @default(true)
+
+  templateId Int
+  template   ChecklistTemplate @relation(fields: [templateId], references: [id])
+
+  items ChecklistItem[]
+
+  @@index([templateId])
+}
+
+model ChecklistItem {
+  id         Int     @id @default(autoincrement())
+  statement  String
+  order      Int
+  isRequired Boolean @default(true)
+
+  sectionId Int
+  section   ChecklistSection @relation(fields: [sectionId], references: [id])
+
+  auditResponses AuditResponse[]
+
+  @@index([sectionId])
+}
+
+model Audit {
+  id             Int            @id @default(autoincrement())
+  inspectionCode String         @unique
+  inspectionType InspectionType
+  notes          String?
+  status         AuditStatus    @default(draft)
+  scheduledAt    DateTime?
+  submittedAt    DateTime?
+  acknowledgedAt DateTime?
+  completedAt    DateTime?
+  createdAt      DateTime       @default(now())
+
+  officeId Int
+  office   Office @relation(fields: [officeId], references: [id])
+
+  inspectorId Int
+  inspector   User @relation("InspectorAudits", fields: [inspectorId], references: [id])
+
+  templateId Int
+  template   ChecklistTemplate @relation(fields: [templateId], references: [id])
+
+  auditResponses AuditResponse[]
+  auditReport    AuditReport?
+
+  @@index([officeId])
+  @@index([inspectorId])
+  @@index([templateId])
+  @@index([status])
+}
+
+model AuditResponse {
+  id               Int       @id @default(autoincrement())
+  answer           String?
+  remarks          String?
+  finding          String?   @default("")
+  correctiveAction String?   @default("")
+  severity         Severity? @default(medium)
+  isNASection      Boolean   @default(false)
+
+  // ── Corrective action tracking (filled by facility manager) ──
+  assignedTo         String? // free text name/team
+  dueDate             DateTime? 
+  resolutionStatus   ResolutionStatus @default(pending)
+  resolutionNote     String? // what was actually done
+  resolutionEvidence String? // file URL of resolution proof
+  resolvedAt         DateTime?
+
+  auditId Int
+  audit   Audit @relation(fields: [auditId], references: [id])
+
+  checklistItemId Int
+  checklistItem   ChecklistItem @relation(fields: [checklistItemId], references: [id])
+
+  evidence         Evidence[]
+  maintenanceTasks MaintenanceTask[] @relation("ResponseMaintenance")
+
+  @@index([auditId])
+  @@index([checklistItemId])
+}
+
+model Evidence {
+  id         Int      @id @default(autoincrement())
+  fileUrl    String
+  fileType   String?
+  uploadedAt DateTime @default(now())
+
+  auditResponseId Int?
+  auditResponse   AuditResponse? @relation(fields: [auditResponseId], references: [id])
+
+  uploadedBy     Int
+  uploadedByUser User @relation("UploadedEvidence", fields: [uploadedBy], references: [id])
+
+  @@index([auditResponseId])
+  @@index([uploadedBy])
+}
+
+model MaintenanceTask {
+  id          Int               @id @default(autoincrement())
+  description String?
+  status      MaintenanceStatus @default(waiting_for_repairs)
+  dueDate     DateTime?
+  completedAt DateTime?
+
+  auditResponseId Int?
+  auditResponse   AuditResponse? @relation("ResponseMaintenance", fields: [auditResponseId], references: [id])
+
+  assignedTo String?
+
+  assignedUserId Int?
+  assignedUser   User? @relation("AssignedMaintenance", fields: [assignedUserId], references: [id])
+
+  @@index([auditResponseId])
+  @@index([assignedUserId])
+}
+
+model AuditReport {
+  id             Int       @id @default(autoincrement())
+  reportUrl      String?
+  generatedAt    DateTime  @default(now())
+  acknowledgedAt DateTime?
+  complianceRate Int?
+  findingsCount  Int?
+
+  auditId Int   @unique
+  audit   Audit @relation(fields: [auditId], references: [id])
+}
+
+model NotificationPreference {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
+  user      User     @relation(fields: [userId], references: [id])
+
+  inspectionUpdates  Boolean @default(true)   // submitted, returned for revision
+  statusChanges      Boolean @default(true)   // acknowledged, resolving, completed, etc.
+  correctiveActions  Boolean @default(false)  // new CA, overdue
+  complianceAlerts   Boolean @default(false)  // below threshold, high risk
+  systemAnnouncements Boolean @default(true)
+
+  updatedAt DateTime @updatedAt
+}
