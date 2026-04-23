@@ -5,7 +5,7 @@ const prisma = require('./db');
 passport.use(new GoogleStrategy({
   clientID:     process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL:  'http://localhost:5001/auth/google/callback',
+  callbackURL:  `${process.env.BACKEND_URL}/auth/google/callback`,
   passReqToCallback: true   // ← allows us to read req in callback
 },
 async (req, accessToken, refreshToken, profile, done) => {
