@@ -8,7 +8,7 @@ const {
   createFacility,
   updateFacility,
   deleteFacility
-} = require('../controllers/FacilityController');
+} = require('../controllers/facilityController');
 
 router.get('/',    authenticate, getFacilities);
 router.get('/:id', authenticate, getFacilityById);
