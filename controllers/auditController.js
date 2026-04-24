@@ -281,23 +281,32 @@ const updateAudit = async (req, res) => {
 // DELETE audit (only draft or scheduled)
 const deleteAudit = async (req, res) => {
   try {
-    const audit = await prisma.audit.findUnique({
-      where: { id: parseInt(req.params.id) }
-    });
+    const id = parseInt(req.params.id)
 
-    if (!audit) return res.status(404).json({ message: 'Audit not found' });
+    const audit = await prisma.audit.findUnique({ where: { id } })
+    if (!audit) return res.status(404).json({ message: 'Audit not found' })
 
-    if (!['draft', 'scheduled', 'ongoing'].includes(audit.status)) {
-      return res.status(400).json({ message: 'Only draft, scheduled, or ongoing audits can be deleted' });
-    }
+    await prisma.$transaction(async (tx) => {
+      const responses = await tx.auditResponse.findMany({ where: { auditId: id } })
+      const responseIds = responses.map(r => r.id)
 
-    await prisma.audit.delete({ where: { id: parseInt(req.params.id) } });
-    res.json({ message: 'Audit deleted' });
+      if (responseIds.length > 0) {
+        await tx.evidence.deleteMany({ where: { auditResponseId: { in: responseIds } } })
+        await tx.maintenanceTask.deleteMany({ where: { auditResponseId: { in: responseIds } } })
+      }
+
+      await tx.auditResponse.deleteMany({ where: { auditId: id } })
+      await tx.auditReport.deleteMany({ where: { auditId: id } })
+      await tx.audit.delete({ where: { id } })
+    })
+
+    res.json({ message: 'Audit deleted successfully' })
+
   } catch (err) {
     console.error('DELETE AUDIT ERROR:', err)
-    res.status(500).json({ message: 'Error deleting audit', error: err.message });
+    res.status(500).json({ message: 'Error deleting audit', error: err.message })
   }
-};
+}
 
 const signOffAudit = async (req, res) => {
   try {
