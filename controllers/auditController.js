@@ -287,8 +287,8 @@ const deleteAudit = async (req, res) => {
 
     if (!audit) return res.status(404).json({ message: 'Audit not found' });
 
-    if (!['draft', 'scheduled'].includes(audit.status)) {
-      return res.status(400).json({ message: 'Only draft or scheduled audits can be deleted' });
+    if (!['draft', 'scheduled', 'ongoing'].includes(audit.status)) {
+      return res.status(400).json({ message: 'Only draft, scheduled, or ongoing audits can be deleted' });
     }
 
     await prisma.audit.delete({ where: { id: parseInt(req.params.id) } });
