@@ -15,26 +15,33 @@ const generateInspectionCode = async () => {
   const year = now.getFullYear()
   const semester = getSemester()
 
-  // Fix: correct boundaries for each semester
   const gte = semester === 1
     ? new Date(`${year}-01-01`)
-    : new Date(`${year}-07-01`)   //  July 1, not June 30
+    : new Date(`${year}-07-01`)
 
   const lt = semester === 1
-    ? new Date(`${year}-07-01`)   //  up to but not including July 1
-    : new Date(`${year + 1}-01-01`) //  up to but not including Jan 1 next year
+    ? new Date(`${year}-07-01`)
+    : new Date(`${year + 1}-01-01`)
 
-  const count = await prisma.audit.count({
+  // Find the latest inspection code instead of counting
+  const latest = await prisma.audit.findFirst({
     where: {
-      createdAt: { gte, lt }
-    }
+      createdAt: { gte, lt },
+      inspectionCode: { startsWith: `INS-${year}-${semester}-` }
+    },
+    orderBy: { inspectionCode: 'desc' }
   })
 
-  const next = count + 1
+  let next = 1
+  if (latest) {
+    const parts = latest.inspectionCode.split('-')
+    const lastNum = parseInt(parts[parts.length - 1], 10)
+    next = lastNum + 1
+  }
+
   const padded = String(next).padStart(3, '0')
   return `INS-${year}-${semester}-${padded}`
 }
-
 // GET all audits
 const getAudits = async (req, res) => {
   try {
