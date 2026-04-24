@@ -294,6 +294,7 @@ const deleteAudit = async (req, res) => {
     await prisma.audit.delete({ where: { id: parseInt(req.params.id) } });
     res.json({ message: 'Audit deleted' });
   } catch (err) {
+    console.error('DELETE AUDIT ERROR:', err)
     res.status(500).json({ message: 'Error deleting audit', error: err.message });
   }
 };
