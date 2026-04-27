@@ -164,10 +164,40 @@ const notifyComplianceAlert = async (officer, audit, rate) => {
   })
 }
 
+/**
+ * Notify assignee when a corrective action is assigned to them
+ * Triggered on: AssignModal submit
+ */
+const notifyCorrectiveActionAssigned = async (assigneeEmail, audit, finding, dueDate) => {
+  if (!assigneeEmail) return
+
+  await sendEmail({
+    to: assigneeEmail,
+    subject: `Corrective Action Assigned — ${audit.inspectionCode}`,
+    html: baseTemplate(
+      'You Have Been Assigned a Corrective Action',
+      `
+        <p>A corrective action from a safety inspection has been assigned to you.</p>
+        <table style="width:100%; border-collapse:collapse; margin: 16px 0;">
+          <tr><td style="padding:8px; color:#666; width:40%;">Inspection Code</td><td style="padding:8px; font-weight:600;">${audit.inspectionCode}</td></tr>
+          <tr style="background:#fafafa;"><td style="padding:8px; color:#666;">Office</td><td style="padding:8px;">${audit.office?.name || '—'}</td></tr>
+          <tr><td style="padding:8px; color:#666;">Finding</td><td style="padding:8px;">${finding.finding || '—'}</td></tr>
+          <tr style="background:#fafafa;"><td style="padding:8px; color:#666;">Recommended Action</td><td style="padding:8px;">${finding.correctiveAction || '—'}</td></tr>
+          <tr><td style="padding:8px; color:#666;">Severity</td><td style="padding:8px;">${finding.severity || '—'}</td></tr>
+          <tr style="background:#fafafa;"><td style="padding:8px; color:#666;">Due Date</td><td style="padding:8px; color:#b91c1c; font-weight:600;">${dueDate ? new Date(dueDate).toLocaleDateString('en-PH') : 'Not specified'}</td></tr>
+        </table>
+        <p style="color:#666; font-size:14px;">Please take the necessary corrective action before the due date.</p>
+      `
+    )
+  })
+}
+
+
 module.exports = {
   sendEmail,
   notifyInspectionSubmitted,
   notifyInspectionStatusChange,
   notifyOverdueCorrectiveAction,
-  notifyComplianceAlert
+  notifyComplianceAlert,
+  notifyCorrectiveActionAssigned
 }

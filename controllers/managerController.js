@@ -2,6 +2,7 @@ const prisma = require('../config/db');
 const {
   notifyInspectionStatusChange
 } = require('../services/emailService')
+const { notifyCorrectiveActionAssigned } = require('../services/emailService')
 
 // ─────────────────────────────────────────────────────────────────
 // SCOPE HELPERS
@@ -229,6 +230,16 @@ const updateFinding = async (req, res) => {
         }
       }
     })
+
+    // ── Email: notify assignee if assignedTo is an email ──
+    if (assignedTo && assignedTo.includes('@')) {
+      notifyCorrectiveActionAssigned(
+        assignedTo,
+        updated.audit,
+        updated,
+        dueDate
+      ).catch(err => console.error('[Email] notifyCorrectiveActionAssigned:', err.message))
+    }
  
     // ── Auto-set audit to 'resolving' when first CA is assigned ──
     if (assignedTo && existing.resolutionStatus === 'pending') {
