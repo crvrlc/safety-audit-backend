@@ -673,34 +673,49 @@ const getCompliance = async (req, res) => {
       .slice(0, 10)
 
     
-    // ── Facility compliance ranking ──
-    const facilityMap = {}
-      for (const office of offices) {
-        const facilityName = office.facility?.name ?? 'Unknown'
-        if (!facilityMap[facilityName]) facilityMap[facilityName] = { rates: [], totalAudits: 0 }
-        facilityMap[facilityName].totalAudits += office.audits.length  
-        
-        const allOfficeResponses = office.audits.flatMap(a => a.auditResponses)
-        if (allOfficeResponses.length === 0) continue
-
-        const resolved = allOfficeResponses.filter(r => r.resolutionStatus === 'resolved').length
-        const rate = parseFloat(((resolved / allOfficeResponses.length) * 100).toFixed(1))
-        facilityMap[facilityName].rates.push(rate)
-      }
-
-      const facilityCompliance = Object.entries(facilityMap)
-        .map(([name, { rates, totalAudits }]) => {
-          const avg = rates.length > 0
-            ? Math.round(rates.reduce((s, r) => s + r, 0) / rates.length)
-            : 0
-          return {
-            name,
-            rate: avg,
-            auditsCount: totalAudits,
-            status: avg >= 90 ? 'Compliant' : avg >= 70 ? 'Needs Monitoring' : 'Critical'
+    // ── Facility compliance ranking (ALL facilities) ──
+    const allFacilities = await prisma.facility.findMany({
+      include: {
+        offices: {
+          include: {
+            audits: {
+              include: {
+                auditReport: true
+              }
+            }
           }
-        })
-        .sort((a, b) => b.rate - a.rate)
+        }
+      }
+    })
+
+    const facilityMap = {}
+    for (const facility of allFacilities) {
+      const facilityName = facility.name
+      if (!facilityMap[facilityName]) facilityMap[facilityName] = { rates: [], totalAudits: 0 }
+
+      for (const office of facility.offices) {
+        facilityMap[facilityName].totalAudits += office.audits.length
+        for (const audit of office.audits) {
+          if (audit.auditReport?.complianceRate != null) {
+            facilityMap[facilityName].rates.push(audit.auditReport.complianceRate)
+          }
+        }
+      }
+    }
+
+    const facilityCompliance = Object.entries(facilityMap)
+      .map(([name, { rates, totalAudits }]) => {
+        const avg = rates.length > 0
+          ? Math.round(rates.reduce((s, r) => s + r, 0) / rates.length)
+          : 0
+        return {
+          name,
+          rate: avg,
+          auditsCount: totalAudits,
+          status: avg >= 90 ? 'Compliant' : avg >= 70 ? 'Needs Monitoring' : 'Critical'
+        }
+      })
+      .sort((a, b) => b.rate - a.rate)
 
     res.json({
       officeCompliance,
