@@ -679,6 +679,10 @@ const getCompliance = async (req, res) => {
         offices: {
           include: {
             audits: {
+              where: {
+                status: { in: ['submitted', 'acknowledged', 'resolving', 'pending_review', 'completed'] },
+                auditReport: { complianceRate: { not: null } }  
+              },
               include: {
                 auditReport: true
               }
