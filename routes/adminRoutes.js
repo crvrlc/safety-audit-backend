@@ -24,7 +24,7 @@ const {
   deleteSection
 } = require('../controllers/checklistAdminController')
 
-const { getAdminAnalytics } = require('../controllers/analyticsController')
+const { getAdminAnalytics } = require('../controllers/adminAnalyticsController')
 
 // All admin routes require authentication + admin role
 router.use(authenticate, authorize('admin'))
