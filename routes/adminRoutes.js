@@ -24,6 +24,8 @@ const {
   deleteSection
 } = require('../controllers/checklistAdminController')
 
+const { getAdminAnalytics } = require('../controllers/analyticsController')
+
 // All admin routes require authentication + admin role
 router.use(authenticate, authorize('admin'))
 
@@ -46,6 +48,9 @@ router.post('/checklists/sections',              createSection)
 router.put('/checklists/reorder',                reorderSections)
 router.put('/checklists/sections/:id/items',     updateSectionItems)  
 router.put('/checklists/sections/:id',           updateSection)
-router.delete('/checklists/sections/:id', deleteSection)       
+router.delete('/checklists/sections/:id', deleteSection)   
+
+// For analytics page
+router.get('/analytics', requireAdmin, getAdminAnalytics)
 
 module.exports = router
