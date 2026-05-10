@@ -51,6 +51,6 @@ router.put('/checklists/sections/:id',           updateSection)
 router.delete('/checklists/sections/:id', deleteSection)   
 
 // For analytics page
-router.get('/analytics', requireAdmin, getAdminAnalytics)
+router.get('/analytics', getAdminAnalytics)
 
 module.exports = router
