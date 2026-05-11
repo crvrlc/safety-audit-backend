@@ -31,6 +31,36 @@ const getAllFindings = async (req, res) => {
   }
 };
 
+// GET findings only for the logged-in officer's audits
+const getMyOfficerFindings = async (req, res) => {
+  try {
+    const findings = await prisma.auditResponse.findMany({
+      where: {
+        answer: 'no',
+        OR: [
+          { finding:          { not: '' } },
+          { correctiveAction: { not: '' } }
+        ],
+        audit: { inspectorId: req.user.id }  // scoped to this officer
+      },
+      include: {
+        audit: {
+          include: {
+            office: { include: { facility: true } },
+            inspector: { select: { id: true, name: true } }
+          }
+        },
+        checklistItem: { include: { section: true } },
+        evidence: true
+      },
+      orderBy: { id: 'desc' }
+    })
+    res.json(findings)
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching findings', error: err.message })
+  }
+}
+
 // GET findings for a specific audit
 const getFindingsByAudit = async (req, res) => {
   try {
@@ -79,7 +109,7 @@ const getFindingById = async (req, res) => {
 };
 
 // GET findings assigned to the current facility manager's audits
-const getMyFindings = async (req, res) => {
+const getManagerFindings = async (req, res) => {
   try {
     const findings = await prisma.auditResponse.findMany({
       where: {
@@ -217,9 +247,10 @@ const resolveAllFindings = async (req, res) => {
 
 module.exports = {
   getAllFindings,
+  getMyOfficerFindings,
   getFindingsByAudit,
   getFindingById,
-  getMyFindings,
+  getManagerFindings,
   assignFinding,
   resolveFinding,
   resolveAllFindings
