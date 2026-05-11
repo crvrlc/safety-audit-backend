@@ -4,7 +4,8 @@ const authenticate = require('../middleware/authMiddleware');
 const authorize    = require('../middleware/roleMiddleware');
 const {
   getFindingById,
-  getMyFindings,
+  getManagerFindings,
+  getMyOfficerFindings,
   getAllFindings,
   assignFinding,
   resolveFinding,
@@ -12,7 +13,8 @@ const {
 } = require('../controllers/findingController');
 
 router.get('/',    authenticate, getAllFindings)
-router.get('/my',  authenticate, getMyFindings)
+router.get('/my',  authenticate, getManagerFindings)
+router.get('/officer-findings', authenticate, getMyOfficerFindings)
 router.get('/:id', authenticate, getFindingById)
 
 router.patch('/:id/assign',
