@@ -8,7 +8,8 @@ const getAllFindings = async (req, res) => {
         answer: 'no',
         OR: [
           { finding:          { not: '' } },
-          { correctiveAction: { not: '' } }
+          { correctiveAction: { not: '' } },
+          { evidence:         { some: {} } }
         ]
       },
       include: {
