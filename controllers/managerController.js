@@ -721,6 +721,19 @@ const getCompliance = async (req, res) => {
       })
       .sort((a, b) => b.rate - a.rate)
 
+    // ── Ongoing corrective actions ──
+    const ongoingCorrectiveActions = await prisma.auditResponse.count({
+      where: {
+        answer: 'no',
+        OR: [
+          { finding:          { not: '' } },
+          { correctiveAction: { not: '' } }
+        ],
+        audit: { office: { facilityId: { in: req.managedFacilityIds } } },
+        resolutionStatus: { in: ['pending', 'assigned'] }  // ← both unassigned and assigned
+      }
+    })
+
     res.json({
       officeCompliance,
       trendData,
@@ -729,6 +742,7 @@ const getCompliance = async (req, res) => {
       avgResolutionDays,
       closureRate,
       facilityCompliance,
+      ongoingCorrectiveActions
     })
   } catch (err) {
     console.error('getCompliance error:', err)
