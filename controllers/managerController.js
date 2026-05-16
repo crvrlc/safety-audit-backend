@@ -629,7 +629,7 @@ const getCompliance = async (req, res) => {
       where: scope,
       include: {
         audit: { select: { createdAt: true } },
-        checklistItem: { include: { section: true } }  // ← ADD THIS
+        checklistItem: { include: { section: true } } 
       }
     })
 
@@ -730,7 +730,7 @@ const getCompliance = async (req, res) => {
           { correctiveAction: { not: '' } }
         ],
         audit: { office: { facilityId: { in: req.managedFacilityIds } } },
-        resolutionStatus: { in: ['pending', 'assigned'] }  // ← both unassigned and assigned
+        resolutionStatus: { in: ['pending', 'assigned'] }  // both unassigned and assigned
       }
     })
 

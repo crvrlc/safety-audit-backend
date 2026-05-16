@@ -48,13 +48,6 @@ const getTemplateById = async (req, res) => {
 const createTemplate = async (req, res) => {
   try {
     const { name, sections } = req.body;
-    // sections = [
-    //   { name: "Fire Safety", order: 1, items: [
-    //     { statement: "Are fire extinguishers accessible?", order: 1 },
-    //     { statement: "Are exits clearly marked?", order: 2 }
-    //   ]},
-    //   ...
-    // ]
 
     const template = await prisma.checklistTemplate.create({
       data: {

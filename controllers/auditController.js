@@ -52,7 +52,7 @@ const getAudits = async (req, res) => {
         },
         inspector: { select: { id: true, name: true, email: true } },
         template: {
-          include: {                          // ← changed from select to include
+          include: {                          
             sections: {
               orderBy: { order: 'asc' },
               include: {
@@ -61,7 +61,7 @@ const getAudits = async (req, res) => {
             }
           }
         },
-        auditResponses: true,                // ← ADD THIS
+        auditResponses: true,                
         auditReport: true
       },
       orderBy: { createdAt: 'desc' }
@@ -85,7 +85,7 @@ const getMyAudits = async (req, res) => {
           include: { facility: true }
         },
         template: {
-          include: {                          // ← changed from select to include
+          include: {                          
             sections: {
               orderBy: { order: 'asc' },
               include: {
@@ -94,7 +94,7 @@ const getMyAudits = async (req, res) => {
             }
           }
         },
-        auditResponses: true,                // ← ADD THIS
+        auditResponses: true,                
         auditReport: true
       },
       orderBy: { createdAt: 'desc' }

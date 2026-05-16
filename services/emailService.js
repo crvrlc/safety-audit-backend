@@ -1,8 +1,4 @@
-// services/emailService.js
 // Uses Nodemailer with Gmail OAuth2 or App Password
-// Make sure to set these env vars:
-//   EMAIL_USER=your-gmail@gmail.com
-//   EMAIL_PASS=your-app-password   (Gmail > Security > App Passwords)
 
 const nodemailer = require('nodemailer')
 

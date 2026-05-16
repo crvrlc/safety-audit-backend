@@ -86,9 +86,9 @@ const saveResponsesBulk = async (req, res) => {
             data: {
               answer:      r.answer,
               remarks:     r.remarks,
-              finding:          r.finding          || '',  // ← missing
-              correctiveAction: r.correctiveAction || '',  // ← missing
-              severity:         r.severity         || 'medium',  // ← missing
+              finding:          r.finding          || '',  
+              correctiveAction: r.correctiveAction || '',  
+              severity:         r.severity         || 'medium',  
               isNASection: r.isNASection ?? false
             }
           });

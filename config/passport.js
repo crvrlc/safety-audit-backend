@@ -6,12 +6,12 @@ passport.use(new GoogleStrategy({
   clientID:     process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
   callbackURL:  `${process.env.BACKEND_URL}/auth/google/callback`,
-  passReqToCallback: true   // ← allows us to read req in callback
+  passReqToCallback: true   
 },
 async (req, accessToken, refreshToken, profile, done) => {
   try {
     const email = profile.emails[0].value;
-    const role = req.session?.role || 'safety_officer';  // ← get role from session
+    const role = req.session?.role || 'safety_officer';  // get role from session
 
     let user = await prisma.user.findUnique({ where: { email } });
 

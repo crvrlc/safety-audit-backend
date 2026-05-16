@@ -8,7 +8,7 @@ const router = express.Router();
 // Step 1: Frontend sends role, we save it to session then redirect to Google
 router.get('/google', (req, res, next) => {
   const role = req.query.role || 'safety_officer';
-  req.session.role = role;   // ← save role in session
+  req.session.role = role;   // save role in session
   passport.authenticate('google', {
     scope: ['profile', 'email']
   })(req, res, next);

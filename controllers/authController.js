@@ -8,8 +8,7 @@ const googleCallback = async (req, res) => {
      if (!req.user) {
       return res.status(401).json({ message: "No user returned from Google" })
     }
-    // For testing: use intended role from cookie/header
-    // In production: role always comes from DB
+
     const user = req.user;
 
     const token = jwt.sign(

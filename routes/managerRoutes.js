@@ -4,10 +4,6 @@ const authenticate = require('../middleware/authMiddleware');
 const authorize    = require('../middleware/roleMiddleware');
 const managerScope = require('../middleware/managerScope');
 
-// console.log('authenticate:', authenticate);  // ← add
-// console.log('authorize:', authorize);        // ← add
-// console.log('managerScope:', managerScope); 
-
 const {
   getStats,
   getTrend,

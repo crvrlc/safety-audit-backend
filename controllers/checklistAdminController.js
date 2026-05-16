@@ -185,7 +185,7 @@ const deleteSection = async (req, res) => {
       where: { sectionId, auditResponses: { some: {} } }
     })
 
-    console.log('Items in use:', itemsInUse.length) // ← add this
+    console.log('Items in use:', itemsInUse.length) 
 
     if (itemsInUse.length > 0) {
       return res.status(400).json({ 
@@ -195,14 +195,14 @@ const deleteSection = async (req, res) => {
 
     // Delete items first, then section
     const deleted = await prisma.checklistItem.deleteMany({ where: { sectionId } })
-    console.log('Items deleted:', deleted.count) // ← add this
+    console.log('Items deleted:', deleted.count) 
     
     await prisma.checklistSection.delete({ where: { id: sectionId } })
-    console.log('Section deleted:', sectionId) // ← add this
+    console.log('Section deleted:', sectionId) 
 
     res.json({ message: 'Section deleted successfully' })
   } catch (err) {
-    console.error('deleteSection error:', err) // ← is this firing?
+    console.error('deleteSection error:', err) 
     res.status(500).json({ message: 'Failed to delete section', error: err.message })
   }
 }
